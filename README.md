@@ -44,7 +44,7 @@ done!
 
 **If the model is very memory consuming like O^2, it is better to make sure the partition size is small because each partitions will train the model, this can explode the memory pretty quickly**.
 
-### Fit GMM distributedly
+### Fit GMM incrementally
 
 ```bash
 python3 src/fit.py --help
@@ -56,7 +56,7 @@ Usage: fit.py [OPTIONS]
 Options:
   --partition_directory TEXT  partition directory
   --num_clusters INTEGER      number of cluster
-  --save_directory TEXT       fit directory to save
+  --save_file TEXT            model save name
   --help                      Show this message and exit.
 ```
 
@@ -65,37 +65,7 @@ python3 src/fit.py
 ```
 
 ```
-running local cluster LocalCluster(9f9401b5, 'tcp://127.0.0.1:36123', workers=5, threads=20, memory=78.33 GiB)
-currently fitting 9 with df shape (1000, 1)
-currently fitting 3 with df shape (1000, 1)
-currently fitting 2 with df shape (1000, 1)
-currently fitting 7 with df shape (1000, 1)
-currently fitting 8 with df shape (1000, 1)
-currently fitting 4 with df shape (1000, 1)
-currently fitting 1 with df shape (1000, 1)
-currently fitting 6 with df shape (1000, 1)
-currently fitting 5 with df shape (1000, 1)
-currently fitting 0 with df shape (1000, 1)
-/home/husein/.local/lib/python3.10/site-packages/sklearn/mixture/_base.py:268: ConvergenceWarning: Initialization 1 did not converge. Try different init parameters, or increase max_iter, tol or check for degenerate data.
-  warnings.warn(
-done fitting 2
-done fitting 7
-/home/husein/.local/lib/python3.10/site-packages/sklearn/mixture/_base.py:268: ConvergenceWarning: Initialization 1 did not converge. Try different init parameters, or increase max_iter, tol or check for degenerate data.
-  warnings.warn(
-done fitting 4
-/home/husein/.local/lib/python3.10/site-packages/sklearn/mixture/_base.py:268: ConvergenceWarning: Initialization 1 did not converge. Try different init parameters, or increase max_iter, tol or check for degenerate data.
-  warnings.warn(
-/home/husein/.local/lib/python3.10/site-packages/sklearn/mixture/_base.py:268: ConvergenceWarning: Initialization 1 did not converge. Try different init parameters, or increase max_iter, tol or check for degenerate data.
-  warnings.warn(
-done fitting 0
-done fitting 8
-done fitting 9
-done fitting 3
-/home/husein/.local/lib/python3.10/site-packages/sklearn/mixture/_base.py:268: ConvergenceWarning: Initialization 1 did not converge. Try different init parameters, or increase max_iter, tol or check for degenerate data.
-  warnings.warn(
-done fitting 5
-done fitting 6
-done fitting 1
+10it [00:10,  1.07s/it]
 done!
 ```
 
@@ -110,8 +80,70 @@ Usage: transform.py [OPTIONS]
 
 Options:
   --partition_directory TEXT  partition directory
-  --model_directory TEXT      model directory
+  --model_filename TEXT       model filename
   --save_directory TEXT       transform directory to save
   --eps FLOAT                 epsilon
   --help                      Show this message and exit.
+```
+
+```bash
+python3 src/transform.py
+```
+
+```
+running local cluster LocalCluster(35e7be23, 'tcp://127.0.0.1:39533', workers=5, threads=20, memory=78.33 GiB)
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+  warnings.warn(
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+  warnings.warn(
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+  warnings.warn(
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+  warnings.warn(
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+  warnings.warn(
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+  warnings.warn(
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+  warnings.warn(
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+  warnings.warn(
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+  warnings.warn(
+done!
+```
+
+### Inverse transform distributedly
+
+```
+python3 src/inverse_transform.py --help
+```
+
+```
+Usage: inverse_transform.py [OPTIONS]
+
+Options:
+  --partition_directory TEXT  partition directory
+  --model_filename TEXT       model filename
+  --transform_directory TEXT  transform directory to save
+  --help                      Show this message and exit.
+```
+
+```
+python3 src/inverse_transform.py
+```
+
+```
+running local cluster LocalCluster(ad48d332, 'tcp://127.0.0.1:45891', workers=5, threads=20, memory=78.33 GiB)
+partition id 3, error -0.21489487289370138
+partition id 7, error 3.4416913763379853e-18
+partition id 2, error -0.15482420353388504
+partition id 6, error -0.10072698879028831
+partition id 8, error 5.551115123125783e-19
+partition id 1, error 1.8873791418627663e-18
+partition id 4, error -1.4432899320127034e-18
+partition id 9, error -0.169704923827495
+partition id 5, error -1.6653345369377347e-18
+partition id 0, error -2.220446049250313e-18
+done!
 ```

@@ -11,3 +11,4 @@ save
 save_fit
 save_transform
 save_inverse_transform
+*.pkl

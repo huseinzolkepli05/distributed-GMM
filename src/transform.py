@@ -11,10 +11,10 @@ import os
 
 @click.command()
 @click.option('--partition_directory', default='./save', help='partition directory')
-@click.option('--model_directory', default='./save_fit', help='model directory')
+@click.option('--model_filename', default='./save.pkl', help='model filename')
 @click.option('--save_directory', default='./save_transform', help='transform directory to save')
 @click.option('--eps', default=0.005, help='epsilon')
-def function(partition_directory, model_directory, save_directory, eps):
+def function(partition_directory, model_filename, save_directory, eps):
     os.makedirs(save_directory, exist_ok = True)
 
     cluster = LocalCluster() 
@@ -28,59 +28,36 @@ def function(partition_directory, model_directory, save_directory, eps):
         if partition_info is not None:
             partition_id = partition_info['number']
 
-            files = glob(os.path.join(model_directory, '*.pkl'))
-            models = []
-            for f in files:
-                with open(f, 'rb') as fopen:
-                    models.append(pickle.load(fopen))
+            with open(model_filename, 'rb') as fopen:
+                gm = pickle.load(fopen)
 
-            n_components = models[0].n_components
+            n_components = gm.n_components
 
-            comps, means, covariances = [], [], []
-            weights_sum = np.zeros(n_components)
-            means_sum = np.zeros((n_components, models[0].means_.shape[1]))
-            covariances_sum = np.zeros_like(models[0].covariances_)
-            for gm in models:
-                old_comp = gm.weights_ > eps
-                mode_freq = (pd.Series(gm.predict(df)).value_counts().keys())
-                comp = []
-                for i in range(n_components):
-                    if (i in (mode_freq)) & old_comp[i]:
-                        comp.append(True)
-                    else:
-                        comp.append(False)
-                comps.append(comp)
+            old_comp = gm.weights_ > eps
+            mode_freq = (pd.Series(gm.predict(df)).value_counts().keys())
+            comp = []
+            for i in range(n_components):
+                if (i in (mode_freq)) & old_comp[i]:
+                    comp.append(True)
+                else:
+                    comp.append(False)
 
-                weights_sum += gm.weights_
-                means_sum += gm.weights_[:, np.newaxis] * gm.means_
-                covariances_sum += gm.weights_[:, np.newaxis, np.newaxis] * gm.covariances_
-            
-            weights_sum /= weights_sum.sum()
-            means_merged = means_sum / weights_sum[:, np.newaxis]
-            covariances_merged = covariances_sum / weights_sum[:, np.newaxis, np.newaxis]
-
-            means = means_merged.reshape((1, n_components))
-            stds = np.sqrt(covariances_merged).reshape((1, n_components))
-            comp = [all(column) for column in zip(*comps)]
+            means = gm.means_.reshape((1, n_components))
+            stds = np.sqrt(gm.covariances_).reshape((1, n_components))
 
             current = df.values
             features = np.empty(shape=(len(current),n_components))
             features = (current - means) / (4 * stds) 
             n_opts = sum(comp)
-            print(n_opts)
             
-            probs = []
-            for gm in models:
-                probs.append(gm.predict_proba(current.reshape([-1, 1])))
-            
-            probs = np.mean(np.array(probs), axis = 0)
-            probs = probs[:, comp]
             opt_sel = np.zeros(len(current), dtype='int')
+            probs = gm.predict_proba(current)
+            probs = probs[:, comp]
             for i in range(len(current)):
                 pp = probs[i] + 1e-6
                 pp = pp / sum(pp)
                 opt_sel[i] = np.random.choice(np.arange(n_opts), p=pp)
-            
+                
             probs_onehot = np.zeros_like(probs)
             probs_onehot[np.arange(len(probs)), opt_sel] = 1
             idx = np.arange((len(features)))
@@ -97,7 +74,7 @@ def function(partition_directory, model_directory, save_directory, eps):
             
             filename = os.path.join(save_directory, f'{partition_id}.pkl')
             with open(filename, 'wb') as fopen:
-                pickle.dump([features, re_ordered_phot], fopen)
+                pickle.dump([features, re_ordered_phot, comp], fopen)
 
     a = df.map_partitions(apply)
     a.compute()
