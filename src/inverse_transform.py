@@ -1,4 +1,5 @@
 from sklearn.mixture import BayesianGaussianMixture
+from sklearn.metrics import mean_squared_error 
 from dask.distributed import LocalCluster
 from glob import glob
 from tqdm import tqdm
@@ -59,7 +60,9 @@ def function(partition_directory, model_filename, transform_directory):
             
             data_t[:, st] = tmp
 
-            print(f'partition id {partition_id}, error {np.mean(data_t - current)}')
+            error = mean_squared_error(current[:, 0], data_t[:, 0]) 
+
+            print(f'partition id {partition_id}, MSE {error}')
 
     a = df.map_partitions(apply)
     a.compute()

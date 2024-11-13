@@ -134,16 +134,16 @@ python3 src/inverse_transform.py
 ```
 
 ```
-running local cluster LocalCluster(ad48d332, 'tcp://127.0.0.1:45891', workers=5, threads=20, memory=78.33 GiB)
-partition id 3, error -0.21489487289370138
-partition id 7, error 3.4416913763379853e-18
-partition id 2, error -0.15482420353388504
-partition id 6, error -0.10072698879028831
-partition id 8, error 5.551115123125783e-19
-partition id 1, error 1.8873791418627663e-18
-partition id 4, error -1.4432899320127034e-18
-partition id 9, error -0.169704923827495
-partition id 5, error -1.6653345369377347e-18
-partition id 0, error -2.220446049250313e-18
+running local cluster LocalCluster(3180dc9f, 'tcp://127.0.0.1:46785', workers=5, threads=20, memory=78.33 GiB)
+partition id 9, MSE 23.618487447468592
+partition id 3, MSE 24.376712829199654
+partition id 6, MSE 23.58759148082721
+partition id 2, MSE 24.628141359062816
+partition id 7, MSE 4.967358512563559e-33
+partition id 8, MSE 5.460396578326691e-33
+partition id 1, MSE 3.6115038317149445e-33
+partition id 5, MSE 8.32001735975286e-33
+partition id 4, MSE 5.1645737388688115e-33
+partition id 0, MSE 6.877881017395697e-33
 done!
 ```
