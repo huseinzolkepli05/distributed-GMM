@@ -1,0 +1,13 @@
+Credit.csv
+*__pycache__
+huggingface
+*ipynb_checkpoints
+dist
+build
+*.egg-info
+*.whl
+*Untitled*.ipynb
+save
+save_fit
+save_transform
+save_inverse_transform
