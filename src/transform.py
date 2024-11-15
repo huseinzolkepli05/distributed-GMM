@@ -2,6 +2,7 @@ from sklearn.mixture import BayesianGaussianMixture
 from dask.distributed import LocalCluster
 from glob import glob
 from tqdm import tqdm
+import time
 import numpy as np
 import pandas as pd
 import dask.dataframe
@@ -75,11 +76,14 @@ def function(partition_directory, model_filename, save_directory, eps):
             filename = os.path.join(save_directory, f'{partition_id}.pkl')
             with open(filename, 'wb') as fopen:
                 pickle.dump([features, re_ordered_phot, comp], fopen)
-
+    
     a = df.map_partitions(apply)
+
+    before = time.time()
+    
     a.compute()
 
-    print('done!')
+    print(f'done! Time taken {time.time() - before} seconds')
 
 if __name__ == '__main__':
     function()

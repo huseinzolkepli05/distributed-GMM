@@ -1,6 +1,7 @@
 from sklearn.mixture import BayesianGaussianMixture
 from dask.distributed import LocalCluster
 from tqdm import tqdm
+import time
 import pandas as pd
 import dask.dataframe
 import pickle
@@ -12,11 +13,14 @@ import os
 @click.option('--num_clusters', default=10, help='number of cluster')
 @click.option('--save_file', default='./save.pkl', help='model save name')
 def function(partition_directory, num_clusters, save_file):
+
     df = dask.dataframe.read_parquet(partition_directory)
 
+    before = time.time()
+    
     model = None
-    for part in tqdm(df.partitions):
-        part = part.compute()
+    for i in tqdm(range(df.npartitions)):
+        part = df.get_partition(i).compute()
 
         if model is None:
             model = BayesianGaussianMixture(
@@ -26,12 +30,11 @@ def function(partition_directory, num_clusters, save_file):
                         max_iter=100,n_init=1, random_state=42)
         
         model = model.fit(part)
-        print(model.means_)
     
     with open(save_file, 'wb') as fopen:
         pickle.dump(model, fopen)
 
-    print('done!')
+    print(f'done! Time taken {time.time() - before} seconds')
 
 if __name__ == '__main__':
     function()

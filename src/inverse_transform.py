@@ -3,6 +3,7 @@ from sklearn.metrics import mean_squared_error
 from dask.distributed import LocalCluster
 from glob import glob
 from tqdm import tqdm
+import time
 import numpy as np
 import pandas as pd
 import dask.dataframe
@@ -65,9 +66,12 @@ def function(partition_directory, model_filename, transform_directory):
             print(f'partition id {partition_id}, MSE {error}')
 
     a = df.map_partitions(apply)
+    
+    before = time.time()
+
     a.compute()
 
-    print('done!')
+    print(f'done! Time taken {time.time() - before} seconds')
 
 if __name__ == '__main__':
     function()
