@@ -226,7 +226,7 @@ For debian,
 sudo apt update
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt update
-sudo apt install python3.10 install python3.10-dev -y
+sudo apt install python3.10 python3.10-dev -y
 wget https://bootstrap.pypa.io/get-pip.py
 python3 get-pip.py
 python3 -m pip install --upgrade pip
