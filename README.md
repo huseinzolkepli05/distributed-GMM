@@ -30,19 +30,19 @@ Options:
   --help                    Show this message and exit.
 ```
 
-Generate 100k rows and partition each 5k rows,
+Generate 1M rows and partition each 5k rows,
 
 ```bash
-python3 distributed_gmm/generate_random.py --row_size 100000 --partition_size 5000 --save_directory './save'
+python3 distributed_gmm/generate_random.py --row_size 1000000 --partition_size 5000 --save_directory './save'
 ```
 
 ```
-running local cluster LocalCluster(ecac55d0, 'tcp://127.0.0.1:43199', workers=5, threads=20, memory=78.33 GiB)
-100%|████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  8.13it/s]
-done! Time taken 0.11078763008117676 seconds
+running local cluster LocalCluster(44a4c84d, 'tcp://127.0.0.1:43245', workers=5, threads=20, memory=78.33 GiB)
+100%|████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  9.52it/s]
+done! Time taken 0.21091151237487793 seconds
 ```
 
-Took 0.11078763008117676 seconds to generate random 100k rows.
+Took 0.21091151237487793 seconds to generate random 1M rows.
 
 **If the model is very memory consuming like O^2, it is better to make sure the partition size is small because each partitions will train the model, this can explode the memory pretty quickly**.
 
@@ -75,13 +75,13 @@ python3 distributed_gmm/sampling.py
 ```
 
 ```
-running local cluster LocalCluster(9e3703a8, 'tcp://127.0.0.1:34817', workers=5, threads=20, memory=78.33 GiB)
-combined resample from partition (100000,)
+running local cluster LocalCluster(d3d8b88b, 'tcp://127.0.0.1:41921', workers=5, threads=20, memory=78.33 GiB)
+combined resample from partition (200000,)
 final resample (10000,)
-done! Time taken 0.14350247383117676 seconds
+done! Time taken 0.257307767868042 seconds
 ```
 
-Took 0.14350247383117676 seconds to resample data from 100k rows to 10k rows.
+Took 0.257307767868042 seconds to resample data from 1M rows to 10k rows.
 
 ### Fit GMM from the sampled data
 
@@ -134,18 +134,14 @@ python3 distributed_gmm/transform.py
 ```
 
 ```
-/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:486: UserWarning: X has feature names, but BayesianGaussianMixture was fitted without feature names
   warnings.warn(
-/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
+/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:486: UserWarning: X has feature names, but BayesianGaussianMixture was fitted without feature names
   warnings.warn(
-/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
-  warnings.warn(
-/home/husein/.local/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but BayesianGaussianMixture was fitted with feature names
-  warnings.warn(
-done! Time taken 2.5795013904571533 seconds
+done! Time taken 4.768050909042358 seconds
 ```
 
-Took 2.5795013904571533 seconds to distributedly transformed 100k rows.
+Took 4.768050909042358 seconds to distributedly transformed 1M rows.
 
 ### Inverse transform distributedly
 
@@ -168,22 +164,18 @@ python3 distributed_gmm/inverse_transform.py
 ```
 
 ```
-partition id 19, MSE 7.486293936969915
-partition id 18, MSE 51.90248722053148
-partition id 12, MSE 51.57130909772229
-partition id 17, MSE 50.30620990034558
-partition id 14, MSE 51.257520320770176
-partition id 16, MSE 5.950335136572245
-partition id 13, MSE 24.195435304523798
-partition id 15, MSE 20.75794029983437
-partition id 11, MSE 54.01023675354542
-partition id 10, MSE 10.134746983835955
-partition id 1, MSE 55.32986394009532
-partition id 0, MSE 23.041421146323835
-done! average MSE 36.36832265469004, Time taken 0.14910507202148438 seconds
+partition id 101, MSE 16.204095271461085
+partition id 106, MSE 55.785496029013395
+partition id 100, MSE 48.710000906949595
+partition id 105, MSE 53.49456939221145
+partition id 102, MSE 57.51461710739251
+partition id 0, MSE 44.393166078498794
+partition id 104, MSE 51.0450072769448
+partition id 107, MSE 32.531861655189246
+done! average MSE 39.41494702500879, Time taken 0.26247501373291016 seconds
 ```
 
-Took 0.14910507202148438 seconds to distributedly inverse transformed 100k rows.
+Took 0.26247501373291016 seconds to distributedly inverse transformed 1M rows.
 
 ## Estimate time taken for 1B rows
 
@@ -197,9 +189,9 @@ running local cluster LocalCluster(0ab1dbbf, 'tcp://127.0.0.1:41463', workers=5,
 
 ### Generate random rows
 
-(0.11078763008117676 / 1e5) * 1e9 = 1107.8763008117676
+(0.21091151237487793 / 1e6) * 1e9 = 210.91151237487793
 
-1107.8763008117676 seconds or 18.46460501352946 minutes.
+210.91151237487793 seconds or 3.5151918729146323 minutes.
 
 #### But actual execution might be more faster
 
@@ -212,13 +204,11 @@ running local cluster LocalCluster(d8d462d2, 'tcp://127.0.0.1:39569', workers=5,
   1%|▉                                                                                   | 21/2000 [00:02<03:28,  9.51it/s]
 ```
 
-Estimate from `tqdm` only 3 minutes!
-
 ### Sampling
 
-(0.14350247383117676 / 1e5) * 1e9 = 1435.0247383117676
+(0.257307767868042 / 1e6) * 1e9 = 257.307767868042
 
-1435.0247383117676 seconds or 23.917078971862793 minutes or 0.3986179828643799 hours.
+257.307767868042 seconds or 4.2884627978007 minutes or 0.071474379963345 hours.
 
 **This actually might be more faster like generating the random rows**.
 
@@ -228,25 +218,25 @@ Estimate from `tqdm` only 3 minutes!
 
 ### Transform
 
-(2.5795013904571533 / 1e5) * 1e9 = 25795.013904571533
+(4.768050909042358 / 1e6) * 1e9 = 4768.050909042358
 
-25795.013904571533 seconds or 429.9168984095256 minutes or 7 hours.
+4768.050909042358 seconds or 79.46751515070598 minutes or 1.3244585858450997 hours.
 
 **This actually might be more faster like generating the random rows**.
 
 ### Inverse Transform
 
-(0.14910507202148438 / 1e5) * 1e9 = 1491.0507202148438
+(0.26247501373291016 / 1e6) * 1e9 = 262.47501373291016
 
-1491.0507202148438 seconds or 24.850845336914062 minutes.
+262.47501373291016 seconds or 4.374583562215169 minutes.
 
 **This actually might be more faster like generating the random rows**.
 
 ### Total
 
-1107.8763008117676 + 1435.0247383117676 + 25795.013904571533 + 1491.0507202148438 = 29828.965663909912
+210.91151237487793 + 257.307767868042 + 0.43245673179626465 + 4768.050909042358 + 262.47501373291016 = 5499.177659749985
 
-29828.965663909912 seconds or 497.14942773183185 minutes or 8.285823795530531 hours.
+5499.177659749985 seconds or 91.65296099583308 minutes or 1.5275493499305515 hours.
 
 ## how to deploy on premise with zero internet?
 
@@ -301,7 +291,7 @@ mv dist/*.whl whl_dir
 zip -r whl_dir.zip whl_dir
 ```
 
-3. You can import this library pretty easy,
+3. After that, you can import this library pretty easy,
 
 ```python
 from distributed_gmm import (
