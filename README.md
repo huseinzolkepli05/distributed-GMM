@@ -15,7 +15,7 @@ pip3 install -r requirements.txt
 #### Generate randomly
 
 ```bash
-python3 src/generate_random.py --help
+python3 distributed_gmm/generate_random.py --help
 ```
 
 ```
@@ -33,7 +33,7 @@ Options:
 Generate 100k rows and partition each 5k rows,
 
 ```bash
-python3 src/generate_random.py --row_size 100000 --partition_size 5000 --save_directory './save'
+python3 distributed_gmm/generate_random.py --row_size 100000 --partition_size 5000 --save_directory './save'
 ```
 
 ```
@@ -49,7 +49,7 @@ Took 0.11078763008117676 seconds to generate random 100k rows.
 ### Fit GMM incrementally
 
 ```bash
-python3 src/fit.py --help
+python3 distributed_gmm/fit.py --help
 ```
 
 ```
@@ -63,7 +63,7 @@ Options:
 ```
 
 ```bash
-python3 src/fit.py
+python3 distributed_gmm/fit.py
 ```
 
 ```
@@ -78,7 +78,7 @@ Took 74.2618260383606 seconds to incrementally train 100k rows.
 ### Transform distributedly
 
 ```bash
-python3 src/transform.py --help
+python3 distributed_gmm/transform.py --help
 ```
 
 ```
@@ -93,7 +93,7 @@ Options:
 ```
 
 ```bash
-python3 src/transform.py
+python3 distributed_gmm/transform.py
 ```
 
 ```
@@ -113,7 +113,7 @@ Took 2.5795013904571533 seconds to distributedly transformed 100k rows.
 ### Inverse transform distributedly
 
 ```
-python3 src/inverse_transform.py --help
+python3 distributed_gmm/inverse_transform.py --help
 ```
 
 ```
@@ -127,7 +127,7 @@ Options:
 ```
 
 ```
-python3 src/inverse_transform.py
+python3 distributed_gmm/inverse_transform.py
 ```
 
 ```
@@ -158,7 +158,7 @@ running local cluster LocalCluster(0ab1dbbf, 'tcp://127.0.0.1:41463', workers=5,
 #### But actual execution might be more faster
 
 ```
-python3 src/generate_random.py --row_size 1000000000 --partition_size 5000 --save_directory './save'
+python3 distributed_gmm/generate_random.py --row_size 1000000000 --partition_size 5000 --save_directory './save'
 ```
 
 ```
@@ -195,3 +195,54 @@ Estimate from `tqdm` only 3 minutes!
 1107.8763008117676 + 742618.260383606 + 25795.013904571533 + 1491.0507202148438 = 771012.2013092041
 
 771012.2013092041 seconds or 12850.203355153402 minutes or 214.17005591922336 hours.
+
+## how to deploy on premise with zero internet?
+
+<img src="airflow.png" width="50%">
+
+### Why Airflow?
+
+1. Everything run as DAG and separate.
+
+If we put everything as one script, failure at certain points must rerun the entire script.
+
+But if we run as DAG and each node run one function, failure at certain nodes, we just simply rerun that nodes.
+
+2. Better logging system.
+
+Each DAG nodes have their own logging files, easier for debugging.
+
+3. RBAC UI.
+
+Airflow UI natively RBAC, for an example, we want all users able to check the logs but not all able to rerun the DAG.
+
+### Installation
+
+1. Make sure already provided VM with necessary Linux OS, Redhat or Debian, both are fine, bring a base image with already installed necessary Python version,
+
+For debian,
+
+```bash
+sudo apt update
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update
+sudo apt install python3.10 install python3.10-dev -y
+wget https://bootstrap.pypa.io/get-pip.py
+python3 get-pip.py
+python3 -m pip install --upgrade pip
+```
+
+2. Fetch all necessary wheels based on the requirements.txt,
+
+Either this one you want to bundle together with the base image or you want to separate install, it depends on certain on-premise, some on-premises want to scan the whl files first and make sure everything able to install with 0 internet,
+
+```bash
+mkdir whl_dir
+FILE="requirements.txt"
+while IFS= read -r line || [[ -n "$line" ]]; do
+    echo "Downloading: $line"
+    pip3 download "$line"
+done < "$FILE"
+mv *.whl whl_dir
+zip -r whl_dir.zip whl_dir
+```

@@ -8,10 +8,6 @@ import pickle
 import click
 import os
 
-@click.command()
-@click.option('--partition_directory', default='./save', help='partition directory')
-@click.option('--num_clusters', default=10, help='number of cluster')
-@click.option('--save_file', default='./save.pkl', help='model save name')
 def function(partition_directory, num_clusters, save_file):
 
     df = dask.dataframe.read_parquet(partition_directory)
@@ -36,5 +32,12 @@ def function(partition_directory, num_clusters, save_file):
 
     print(f'done! Time taken {time.time() - before} seconds')
 
+@click.command()
+@click.option('--partition_directory', default='./save', help='partition directory')
+@click.option('--num_clusters', default=10, help='number of cluster')
+@click.option('--save_file', default='./save.pkl', help='model save name')
+def cli(partition_directory, num_clusters, save_file):
+    function(partition_directory, num_clusters, save_file)
+
 if __name__ == '__main__':
-    function()
+    cli()

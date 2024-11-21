@@ -11,10 +11,6 @@ import pickle
 import click
 import os
 
-@click.command()
-@click.option('--partition_directory', default='./save', help='partition directory')
-@click.option('--model_filename', default='./save.pkl', help='model filename')
-@click.option('--transform_directory', default='./save_transform', help='transform directory to save')
 def function(partition_directory, model_filename, transform_directory):
 
     cluster = LocalCluster() 
@@ -73,5 +69,12 @@ def function(partition_directory, model_filename, transform_directory):
 
     print(f'done! Time taken {time.time() - before} seconds')
 
+@click.command()
+@click.option('--partition_directory', default='./save', help='partition directory')
+@click.option('--model_filename', default='./save.pkl', help='model filename')
+@click.option('--transform_directory', default='./save_transform', help='transform directory to save')
+def cli(partition_directory, model_filename, transform_directory):
+    function(partition_directory, model_filename, transform_directory)
+
 if __name__ == '__main__':
-    function()
+    cli()

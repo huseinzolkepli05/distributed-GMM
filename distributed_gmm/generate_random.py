@@ -7,11 +7,6 @@ import pandas as pd
 import click
 import os
 
-@click.command()
-@click.option('--row_size', default=1000000, help='number of rows to generate')
-@click.option('--partition_size', default=100000, help='size of partition')
-@click.option('--batch_size', default=100, help='batch size to send to dask to prevent big graph warning')
-@click.option('--save_directory', default='./save', help='save directory')
 def function(row_size, partition_size, batch_size, save_directory):
     if row_size % partition_size != 0:
         raise Exception('`row_size` must divisible by `partition_size`.')
@@ -22,7 +17,7 @@ def function(row_size, partition_size, batch_size, save_directory):
         pass
     os.makedirs(save_directory, exist_ok = True)
     
-    cluster = LocalCluster() 
+    cluster = LocalCluster()
     client = cluster.get_client()
     print('running local cluster', cluster)
 
@@ -45,5 +40,13 @@ def function(row_size, partition_size, batch_size, save_directory):
 
     print(f'done! Time taken {time.time() - before} seconds')
 
+@click.command()
+@click.option('--row_size', default=1000000, help='number of rows to generate')
+@click.option('--partition_size', default=100000, help='size of partition')
+@click.option('--batch_size', default=100, help='batch size to send to dask to prevent big graph warning')
+@click.option('--save_directory', default='./save', help='save directory')
+def cli(row_size, partition_size, batch_size, save_directory):
+    function(row_size, partition_size, batch_size, save_directory)
+
 if __name__ == '__main__':
-    function()
+    cli()

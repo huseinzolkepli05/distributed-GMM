@@ -10,11 +10,6 @@ import pickle
 import click
 import os
 
-@click.command()
-@click.option('--partition_directory', default='./save', help='partition directory')
-@click.option('--model_filename', default='./save.pkl', help='model filename')
-@click.option('--save_directory', default='./save_transform', help='transform directory to save')
-@click.option('--eps', default=0.005, help='epsilon')
 def function(partition_directory, model_filename, save_directory, eps):
     os.makedirs(save_directory, exist_ok = True)
 
@@ -85,8 +80,16 @@ def function(partition_directory, model_filename, save_directory, eps):
 
     print(f'done! Time taken {time.time() - before} seconds')
 
+@click.command()
+@click.option('--partition_directory', default='./save', help='partition directory')
+@click.option('--model_filename', default='./save.pkl', help='model filename')
+@click.option('--save_directory', default='./save_transform', help='transform directory to save')
+@click.option('--eps', default=0.005, help='epsilon')
+def cli(partition_directory, model_filename, save_directory, eps):
+    function(partition_directory, model_filename, save_directory, eps)
+    
 if __name__ == '__main__':
-    function()
+    cli()
 
 
 
