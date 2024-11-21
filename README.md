@@ -198,7 +198,7 @@ Estimate from `tqdm` only 3 minutes!
 
 ## how to deploy on premise with zero internet?
 
-<img src="airflow.png" width="50%">
+<img src="airflow-v2.png" width="50%">
 
 ### Why Airflow?
 
