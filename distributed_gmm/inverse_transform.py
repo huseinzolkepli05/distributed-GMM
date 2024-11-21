@@ -61,13 +61,16 @@ def function(partition_directory, model_filename, transform_directory):
 
             print(f'partition id {partition_id}, MSE {error}')
 
+            return error
+
     a = df.map_partitions(apply)
     
     before = time.time()
 
-    a.compute()
+    errors = a.compute()
+    mean_error = np.mean(errors)
 
-    print(f'done! Time taken {time.time() - before} seconds')
+    print(f'done! average MSE {mean_error}, Time taken {time.time() - before} seconds')
 
 @click.command()
 @click.option('--partition_directory', default='./save', help='partition directory')

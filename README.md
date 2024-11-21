@@ -46,7 +46,44 @@ Took 0.11078763008117676 seconds to generate random 100k rows.
 
 **If the model is very memory consuming like O^2, it is better to make sure the partition size is small because each partitions will train the model, this can explode the memory pretty quickly**.
 
-### Fit GMM incrementally
+### Sampling distributedly
+
+This is to reduce the amount of data to train the model by simply generate samples using `np.percentile` from 0-100 for each partitions,
+
+```bash
+python3 distributed_gmm/sampling.py --help
+```
+
+```
+Usage: sampling.py [OPTIONS]
+
+Options:
+  --partition_directory TEXT      partition directory
+  --max_sample_size_partition INTEGER
+                                  max sample row size for each partition, it
+                                  can be less but not more than definition
+  --max_sample_size INTEGER       max sample size after merging from all
+                                  partition samples, will perform another
+                                  samples
+  --save_directory TEXT           transform directory to save
+  --save_file TEXT                save sampled file as npy format
+  --help                          Show this message and exit.
+```
+
+```bash
+python3 distributed_gmm/sampling.py
+```
+
+```
+running local cluster LocalCluster(9e3703a8, 'tcp://127.0.0.1:34817', workers=5, threads=20, memory=78.33 GiB)
+combined resample from partition (100000,)
+final resample (10000,)
+done! Time taken 0.14350247383117676 seconds
+```
+
+Took 0.14350247383117676 seconds to resample data from 100k rows to 10k rows.
+
+### Fit GMM from the sampled data
 
 ```bash
 python3 distributed_gmm/fit.py --help
@@ -56,10 +93,10 @@ python3 distributed_gmm/fit.py --help
 Usage: fit.py [OPTIONS]
 
 Options:
-  --partition_directory TEXT  partition directory
-  --num_clusters INTEGER      number of cluster
-  --save_file TEXT            model save name
-  --help                      Show this message and exit.
+  --array_file TEXT       sampled npy file
+  --num_clusters INTEGER  number of cluster
+  --save_file TEXT        model save name
+  --help                  Show this message and exit.
 ```
 
 ```bash
@@ -67,13 +104,13 @@ python3 distributed_gmm/fit.py
 ```
 
 ```
- 99%|████████████████████████████████████████████████████████████████████████████████████▏| 99/100 [01:13<00:00,  1.05it/s]/home/husein/.local/lib/python3.10/site-packages/sklearn/mixture/_base.py:268: ConvergenceWarning: Initialization 1 did not converge. Try different init parameters, or increase max_iter, tol or check for degenerate data.
+training data shape (10000, 1)
+/home/husein/.local/lib/python3.10/site-packages/sklearn/mixture/_base.py:268: ConvergenceWarning: Initialization 1 did not converge. Try different init parameters, or increase max_iter, tol or check for degenerate data.
   warnings.warn(
-100%|████████████████████████████████████████████████████████████████████████████████████| 100/100 [01:14<00:00,  1.35it/s]
-done! Time taken 74.2618260383606 seconds
+done! Time taken 0.43245673179626465 seconds
 ```
 
-Took 74.2618260383606 seconds to incrementally train 100k rows.
+Took 0.43245673179626465 seconds to train on 10k sampled rows.
 
 ### Transform distributedly
 
@@ -131,10 +168,19 @@ python3 distributed_gmm/inverse_transform.py
 ```
 
 ```
-partition id 16, MSE 16.40408912192847
-partition id 13, MSE 10.011880046104814
-partition id 12, MSE 16.24049570475697
-done! Time taken 0.14910507202148438 seconds
+partition id 19, MSE 7.486293936969915
+partition id 18, MSE 51.90248722053148
+partition id 12, MSE 51.57130909772229
+partition id 17, MSE 50.30620990034558
+partition id 14, MSE 51.257520320770176
+partition id 16, MSE 5.950335136572245
+partition id 13, MSE 24.195435304523798
+partition id 15, MSE 20.75794029983437
+partition id 11, MSE 54.01023675354542
+partition id 10, MSE 10.134746983835955
+partition id 1, MSE 55.32986394009532
+partition id 0, MSE 23.041421146323835
+done! average MSE 36.36832265469004, Time taken 0.14910507202148438 seconds
 ```
 
 Took 0.14910507202148438 seconds to distributedly inverse transformed 100k rows.
@@ -168,11 +214,17 @@ running local cluster LocalCluster(d8d462d2, 'tcp://127.0.0.1:39569', workers=5,
 
 Estimate from `tqdm` only 3 minutes!
 
+### Sampling
+
+(0.14350247383117676 / 1e5) * 1e9 = 1435.0247383117676
+
+1435.0247383117676 seconds or 23.917078971862793 minutes or 0.3986179828643799 hours.
+
+**This actually might be more faster like generating the random rows**.
+
 ### Fit GMM
 
-(74.2618260383606 / 1e5) * 1e9 = 742618.260383606
-
-742618.260383606 seconds or 12376.971006393433 minutes or 206.28285010655722 hours.
+0.43245673179626465 seconds.
 
 ### Transform
 
@@ -192,9 +244,9 @@ Estimate from `tqdm` only 3 minutes!
 
 ### Total
 
-1107.8763008117676 + 742618.260383606 + 25795.013904571533 + 1491.0507202148438 = 771012.2013092041
+1107.8763008117676 + 1435.0247383117676 + 25795.013904571533 + 1491.0507202148438 = 29828.965663909912
 
-771012.2013092041 seconds or 12850.203355153402 minutes or 214.17005591922336 hours.
+29828.965663909912 seconds or 497.14942773183185 minutes or 8.285823795530531 hours.
 
 ## how to deploy on premise with zero internet?
 
@@ -244,5 +296,42 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     pip3 download "$line"
 done < "$FILE"
 mv *.whl whl_dir
+python3 setup.py sdist bdist_wheel
+mv dist/*.whl whl_dir
 zip -r whl_dir.zip whl_dir
 ```
+
+3. You can import this library pretty easy,
+
+```python
+from distributed_gmm import (
+    generate_random,
+    fit,
+    transform,
+    inverse_transform,
+)
+
+if __name__ == '__main__':
+    generate_random.function(100000, 5000, 100, './save')
+```
+
+Do not forget to run inside `if __name__ == '__main__'` because by default dask cluster use multiprocessing and this required a fork or else you will get an error,
+
+```
+RuntimeError: 
+        An attempt has been made to start a new process before the
+        current process has finished its bootstrapping phase.
+
+        This probably means that you are not using fork to start your
+        child processes and you have forgotten to use the proper idiom
+        in the main module:
+
+            if __name__ == '__main__':
+                freeze_support()
+                ...
+
+        The "freeze_support()" line can be omitted if the program
+        is not going to be frozen to produce an executable.
+```
+
+Unless we set `processes=False` to use threads based, https://docs.dask.org/en/stable/deploying-python.html#reference
